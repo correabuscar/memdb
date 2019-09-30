@@ -1,0 +1,67 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 405680e..4a533d9 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -14,16 +14,17 @@
+ //! # }
+ //! ```
+ 
+-use parking_lot::RwLock;
++//use parking_lot::RwLock;
+ 
+-use std::collections::HashMap;
++//use std::collections::HashMap;
++use dashmap::DashMap; //thanks xacrimon https://github.com/rustasync/memdb/issues/5#issuecomment-536401342
+ use std::io;
+ use std::sync::Arc;
+ 
+ /// Key-value database.
+ #[derive(Debug, Clone)]
+ pub struct Memdb {
+-    hashmap: Arc<RwLock<HashMap<Vec<u8>, Vec<u8>>>>,
++    hashmap: Arc<DashMap<Vec<u8>, Vec<u8>>>,
+ }
+ 
+ impl Memdb {
+@@ -31,7 +32,7 @@ impl Memdb {
+     #[inline]
+     pub async fn open() -> io::Result<Self> {
+         Ok(Self {
+-            hashmap: Arc::new(RwLock::new(HashMap::<Vec<u8>, Vec<u8>>::new())),
++            hashmap: Arc::new(DashMap::<Vec<u8>, Vec<u8>>::default()),
+         })
+     }
+ 
+@@ -42,9 +43,9 @@ impl Memdb {
+         key: impl AsRef<[u8]>,
+         value: impl AsRef<[u8]>,
+     ) -> io::Result<Option<Vec<u8>>> {
+-        let hashmap = self.hashmap.clone();
+-        let mut hashmap = hashmap.write();
+-        Ok(hashmap.insert(key.as_ref().to_owned(), value.as_ref().to_owned()))
++        //let hashmap = self.hashmap.clone();
++        //let mut hashmap = hashmap.write();
++        Ok(self.hashmap.get_or_insert(&key.as_ref().to_owned(), value.as_ref().to_owned()))
+     }
+ 
+     /// Get a value from the database.
+@@ -52,15 +53,15 @@ impl Memdb {
+     #[inline]
+     pub async fn get(&self, key: impl AsRef<[u8]>) -> io::Result<Option<Vec<u8>>> {
+         let key = key.as_ref().to_owned();
+-        let hashmap = &self.hashmap.read();
+-        Ok(hashmap.get(&key).cloned())
++        //let hashmap = &self.hashmap.read();
++        Ok(self.hashmap.get(&key))
+     }
+ 
+     /// Delete a value from the database.
+     #[inline]
+     pub async fn del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Option<Vec<u8>>> {
+         let key = key.as_ref().to_owned();
+-        let hashmap = &mut self.hashmap.write();
+-        Ok(hashmap.remove(&key))
++        //let hashmap = &mut self.hashmap.write();
++        Ok(self.hashmap.remove(&key))
+     }
+ }

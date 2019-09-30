@@ -18,7 +18,16 @@ use parking_lot::RwLock;
 
 use std::collections::HashMap;
 use std::io;
+use std::io::{Error, ErrorKind};
 use std::sync::Arc;
+use custom_error::custom_error;
+//custom_error!{ NotFound{key:Vec<u8>} = format!("Attempted to delete inexisting key '{}'", String::from_utf8(key).unwrap()) }
+//custom_error!{ NotFound{key:Vec<u8>} = "Attempted to delete inexisting key '{key}'" }
+custom_error!{ pub MyError
+    NotFound{key: Vec<u8>} =@{
+    format!("Attempted to delete inexisting key '{}'", String::from_utf8(*key).unwrap())
+    },
+}
 
 /// Key-value database.
 #[derive(Debug, Clone)]
@@ -56,11 +65,33 @@ impl Memdb {
         Ok(hashmap.get(&key).cloned())
     }
 
-    /// Delete a value from the database.
+    /// Ensure a key doesn't exist in the db.
+    /// doesn't fail if value doesn't exist
     #[inline]
-    pub async fn del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Option<Vec<u8>>> {
+    pub async fn ensure_del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Option<Vec<u8>>> {
         let key = key.as_ref().to_owned();
         let hashmap = &mut self.hashmap.write();
         Ok(hashmap.remove(&key))
+    }
+
+    /// Delete a key from the database.
+    /// fails if key didn't already exist
+    //#[inline]  bad for tracing!  nope, that's not it, `cargo test` simply cannot show me the
+    //exact line number for the failing assert_eq!
+    pub async fn del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Vec<u8>> {
+        let key = key.as_ref().to_owned();
+        let hashmap = &mut self.hashmap.write();
+        let res=hashmap.remove(&key);
+        match res {
+            Some(prev_val) => {
+                //Err::<(), Option<Vec<u8>>>(Some(prev_val))
+                return Ok(prev_val);
+            },
+            None => {
+                //Ok::<(), Option<Vec<u8>>>(())
+                return Err(Error::new(ErrorKind::NotFound,
+                           format!("Attempted to delete inexisting key '{}'", String::from_utf8(key).unwrap())));
+            },
+        }
     }
 }
