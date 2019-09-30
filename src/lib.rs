@@ -62,11 +62,11 @@ impl std::fmt::Display for MyError {
 //        Some(&self.side) //uhmm....
 //    }
 //}
-impl std::convert::From<std::io::ErrorKind> for MyError {
-    fn from(kind: std::io::ErrorKind) -> MyError {
-        MyError::IOError{ source: kind }
-    }
-}
+//impl std::convert::From<std::io::ErrorKind> for MyError {
+//    fn from(kind: std::io::ErrorKind) -> MyError {
+//        MyError::IOError{ source: kind }
+//    }
+//}
 impl std::convert::From<MyError> for std::io::Error {
     fn from(kind: MyError) -> std::io::Error {
         //MyError::IOError{ source: kind }
