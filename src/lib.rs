@@ -32,11 +32,11 @@ use std::sync::Arc;
 //    },
 //}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum MyError {
     NotFound { key: Vec<u8> },
     //IOError { source: std::io::Error },
-    IOError { source: std::io::ErrorKind },
+    //IOError { source: std::io::ErrorKind },
     Err41,
 }
 
@@ -46,8 +46,8 @@ impl std::fmt::Display for MyError {
     fn fmt(&self, f: &mut std::fmt::Formatter)
     -> std::fmt::Result {
         match self {
-            MyError::NotFound { key } => write!(f, "unknown error with code {}." , String::from_utf8(key.to_vec()).unwrap()),
-            MyError::IOError { source } => write!(f, "{:#?}", source), //FIXME; do I need ErrorKind or io::Error?
+            MyError::NotFound { key } => write!(f, "Attempted to delete inexisting key '{}'" , String::from_utf8(key.to_vec()).unwrap()),
+            //MyError::IOError { source } => write!(f, "{:#?}", source), //FIXME; do I need ErrorKind or io::Error?
             MyError::Err41 => write!(f, "Sit by a lake"),
         }
     }
@@ -70,7 +70,7 @@ impl std::fmt::Display for MyError {
 impl std::convert::From<MyError> for std::io::Error {
     fn from(kind: MyError) -> std::io::Error {
         //MyError::IOError{ source: kind }
-        std::io::Error::new(std::io::ErrorKind::NotFound, "FIXME")
+        std::io::Error::new(std::io::ErrorKind::NotFound, kind.to_string())
     }
 }
 
