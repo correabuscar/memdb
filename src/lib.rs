@@ -34,11 +34,13 @@ use std::sync::Arc;
 //    },
 //}
 
-#[derive(Debug, PartialEq, Clone)]
+//#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq)]
 pub enum MyError {
     NotFound { key: Vec<u8> },
     //IOError { source: std::io::Error },
     //IOError { source: std::io::ErrorKind },
+    //Io{ source: std::io::Error },
     Err41,
 }
 
