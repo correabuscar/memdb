@@ -45,6 +45,42 @@ async fn set_get_del() -> io::Result<()> {
     Ok(())
 }
 
+#[runtime::test]
+async fn set_get_del_dry() -> io::Result<()> {
+    let mut db = Memdb::open().await?;
+    let key="beep";
+    let val="boop";
+    let oval=val.as_bytes().to_owned();
+    let soval=Some(oval.clone());
+    db.set(key, val).await?;
+    let gval = db.get(key).await?;
+    assert_eq!(gval, Some(val.as_bytes().to_owned()));
+    //assert_eq!(gval, Some(oval)); //nope
+    assert_eq!(gval, soval);
+    assert_eq!(Some(String::from_utf8(gval.unwrap()).unwrap()), Some(val.to_string()));
+    let deleted=db.ensure_del(key).await?;
+    assert_eq!(deleted, Some(val.as_bytes().to_owned()));
+    assert_eq!(deleted, soval);
+    let gval = db.get(key).await?;
+    //println!("{:#?}", gval);//None
+    assert_eq!(gval, None);
+
+    db.set(key, val).await?;
+    let deleted=db.del(key).await?;
+    assert_eq!(deleted, val.as_bytes().to_owned());
+    assert_eq!(deleted, oval);
+    let deleted=db.del(key).await;
+    assert!(deleted.is_err());
+    //println!("{0:#?} {1}",deleted,deleted.clone().err().unwrap());
+    //let expected=Error::new(ErrorKind::NotFound,
+    //               format!("Attempted to delete inexisting key '{}'", "beep"));
+    let expected=memdb::MyError::NotFound { key: key.as_bytes().to_owned() };
+    //println!("{:#?}",expected);
+    assert_eq!(deleted.err().unwrap(), expected);
+
+    Ok(())
+}
+
 
 #[runtime::test]
 async fn double_del() -> io::Result<()> {
