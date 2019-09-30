@@ -14,6 +14,8 @@
 //! # }
 //! ```
 
+#![allow(unused_imports)]  //TODO: remove, eventually!
+
 use parking_lot::RwLock;
 
 use std::collections::HashMap;
@@ -46,7 +48,8 @@ impl std::fmt::Display for MyError {
     fn fmt(&self, f: &mut std::fmt::Formatter)
     -> std::fmt::Result {
         match self {
-            MyError::NotFound { key } => write!(f, "Attempted to delete inexisting key '{}'" , String::from_utf8(key.to_vec()).unwrap()),
+            MyError::NotFound { key } => write!(f, "Attempted to delete inexisting key '{}'" ,
+                                                String::from_utf8(key.to_vec()).unwrap()),
             //MyError::IOError { source } => write!(f, "{:#?}", source), //FIXME; do I need ErrorKind or io::Error?
             MyError::Err41 => write!(f, "Sit by a lake"),
         }

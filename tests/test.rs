@@ -1,3 +1,5 @@
+#![allow(unused_imports)]  //TODO: remove, eventually!
+
 use memdb::Memdb;
 //use std::error;
 use std::io;
