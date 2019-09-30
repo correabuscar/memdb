@@ -31,11 +31,12 @@ async fn set_get_del() -> io::Result<()> {
     db.set("beep", "boop").await?;
     let deleted=db.del("beep").await?;
     assert_eq!(deleted, "boop".as_bytes().to_owned());
-    let deleted=db.del("beep").await?;
-    println!("{:#?}",deleted);
+    let deleted=db.del("beep").await;
+    //println!("{:#?}",deleted);
     assert!(deleted.is_err());
-    let expected=Error::new(ErrorKind::NotFound,
-                   format!("Attempted to delete inexisting key '{}'", "beep"));
+    //let expected=Error::new(ErrorKind::NotFound,
+    //               format!("Attempted to delete inexisting key '{}'", "beep"));
+    let expected=memdb::MyError::NotFound { key: "beep".as_bytes().to_owned() };
     assert_eq!(deleted.err().unwrap(), expected);
 
     Ok(())

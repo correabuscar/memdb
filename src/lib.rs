@@ -18,15 +18,60 @@ use parking_lot::RwLock;
 
 use std::collections::HashMap;
 use std::io;
-use std::io::{Error, ErrorKind};
+//use std::io::{Error, ErrorKind};
+//use std::error::Error;
+
 use std::sync::Arc;
-use custom_error::custom_error;
-//custom_error!{ NotFound{key:Vec<u8>} = format!("Attempted to delete inexisting key '{}'", String::from_utf8(key).unwrap()) }
-//custom_error!{ NotFound{key:Vec<u8>} = "Attempted to delete inexisting key '{key}'" }
-custom_error!{ pub MyError
-    NotFound{key: Vec<u8>} =@{
-        format!("Attempted to delete inexisting key '{}'", String::from_utf8(*key).unwrap())
-    },
+
+//use custom_error::custom_error;
+////custom_error!{ NotFound{key:Vec<u8>} = format!("Attempted to delete inexisting key '{}'", String::from_utf8(key).unwrap()) }
+////custom_error!{ NotFound{key:Vec<u8>} = "Attempted to delete inexisting key '{key}'" }
+//custom_error!{ #[derive(PartialEq,PartialOrd)] pub MyError2
+//    NotFound{key: Vec<u8>, source: io::Error} =@{ //TODO: how to use that 'source' when returning NotFound?!
+//        format!("Attempted to delete inexisting key '{}'", String::from_utf8(key.to_vec()).unwrap())
+//    },
+//}
+
+#[derive(Debug, PartialEq)]
+pub enum MyError {
+    NotFound { key: Vec<u8> },
+    //IOError { source: std::io::Error },
+    IOError { source: std::io::ErrorKind },
+    Err41,
+}
+
+//impl std::error::Error for MyError {}
+
+impl std::fmt::Display for MyError {
+    fn fmt(&self, f: &mut std::fmt::Formatter)
+    -> std::fmt::Result {
+        match self {
+            MyError::NotFound { key } => write!(f, "unknown error with code {}." , String::from_utf8(key.to_vec()).unwrap()),
+            MyError::IOError { source } => write!(f, "{:#?}", source), //FIXME; do I need ErrorKind or io::Error?
+            MyError::Err41 => write!(f, "Sit by a lake"),
+        }
+    }
+}
+////doneishTODO: https://doc.rust-lang.org/std/error/trait.Error.html#method.source
+//impl Error for MyError {
+//    fn description(&self) -> &str {
+//        "I'm the superhero of errors"
+//    }
+//
+//    fn source(&self) -> Option<&(dyn Error + 'static)> {
+//        Some(&self.side) //uhmm....
+//    }
+//}
+impl std::convert::From<std::io::ErrorKind> for MyError {
+    fn from(kind: std::io::ErrorKind) -> MyError {
+        MyError::IOError{ source: kind }
+    }
+}
+impl std::convert::From<MyError> for std::io::Error {
+    fn from(kind: MyError) -> std::io::Error {
+        //MyError::IOError{ source: kind }
+        std::io::Error::new(std::io::ErrorKind::NotFound, "FIXME")
+    }
 }
 
 /// Key-value database.
@@ -78,7 +123,8 @@ impl Memdb {
     /// fails if key didn't already exist
     //#[inline]  bad for tracing!  nope, that's not it, `cargo test` simply cannot show me the
     //exact line number for the failing assert_eq!
-    pub async fn del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Vec<u8>> {
+    //pub async fn del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Vec<u8>> {
+    pub async fn del(&mut self, key: impl AsRef<[u8]>) -> std::result::Result<Vec<u8>, MyError> {
         let key = key.as_ref().to_owned();
         let hashmap = &mut self.hashmap.write();
         let res=hashmap.remove(&key);
@@ -88,9 +134,11 @@ impl Memdb {
                 return Ok(prev_val);
             },
             None => {
-                //Ok::<(), Option<Vec<u8>>>(())
-                return Err(Error::new(ErrorKind::NotFound,
-                           format!("Attempted to delete inexisting key '{}'", String::from_utf8(key).unwrap())));
+                //Ok::<(), Option<Vec<u8>>>(()) // bad
+                //return Err(Error::new(ErrorKind::NotFound, //this is good aka way 1
+                //           format!("Attempted to delete inexisting key '{}'", String::from_utf8(key).unwrap())));
+                //return Err(MyError2::NotFound{ key }); //TODO: have to specify 'source' ?? what?
+                return Err(MyError::NotFound{ key });
             },
         }
     }
