@@ -25,7 +25,7 @@ use custom_error::custom_error;
 //custom_error!{ NotFound{key:Vec<u8>} = "Attempted to delete inexisting key '{key}'" }
 custom_error!{ pub MyError
     NotFound{key: Vec<u8>} =@{
-    format!("Attempted to delete inexisting key '{}'", String::from_utf8(*key).unwrap())
+        format!("Attempted to delete inexisting key '{}'", String::from_utf8(*key).unwrap())
     },
 }
 
