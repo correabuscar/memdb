@@ -25,6 +25,9 @@ use std::io;
 
 use std::sync::Arc;
 
+pub type Result<T> = std::result::Result<T, MyError>;
+
+
 //use custom_error::custom_error;
 ////custom_error!{ NotFound{key:Vec<u8>} = format!("Attempted to delete inexisting key '{}'", String::from_utf8(key).unwrap()) }
 ////custom_error!{ NotFound{key:Vec<u8>} = "Attempted to delete inexisting key '{key}'" }
@@ -40,8 +43,7 @@ pub enum MyError {
     NotFound { key: Vec<u8> },
     //IOError { source: std::io::Error },
     //IOError { source: std::io::ErrorKind },
-    //Io{ source: std::io::Error },
-    Err41,
+    //Io{ source: std::io::Error }, //binary operation `!=` cannot be applied to type `std::io::Error`
 }
 
 //impl std::error::Error for MyError {}
@@ -53,7 +55,6 @@ impl std::fmt::Display for MyError {
             MyError::NotFound { key } => write!(f, "Attempted to delete inexisting key '{}'" ,
                                                 String::from_utf8(key.to_vec()).unwrap()),
             //MyError::IOError { source } => write!(f, "{:#?}", source), //FIXME; do I need ErrorKind or io::Error?
-            MyError::Err41 => write!(f, "Sit by a lake"),
         }
     }
 }
@@ -129,7 +130,8 @@ impl Memdb {
     //#[inline]  bad for tracing!  nope, that's not it, `cargo test` simply cannot show me the
     //exact line number for the failing assert_eq!
     //pub async fn del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Vec<u8>> {
-    pub async fn del(&mut self, key: impl AsRef<[u8]>) -> std::result::Result<Vec<u8>, MyError> {
+    //pub async fn del(&mut self, key: impl AsRef<[u8]>) -> std::result::Result<Vec<u8>, MyError> {
+    pub async fn del(&mut self, key: impl AsRef<[u8]>) -> Result<Vec<u8>> {
         let key = key.as_ref().to_owned();
         let hashmap = &mut self.hashmap.write();
         let res=hashmap.remove(&key);
