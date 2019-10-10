@@ -135,6 +135,8 @@ impl Memdb {
         let key = key.as_ref().to_owned();
         let hashmap = &mut self.hashmap.write();
         let res=hashmap.remove(&key);
+        //let _f = std::fs::File::create("FIXME")?; // `?` couldn't convert the error to `MyError`:
+        //the trait `std::convert::From<std::io::Error>` is not implemented for `MyError`
         match res {
             Some(prev_val) => {
                 //Err::<(), Option<Vec<u8>>>(Some(prev_val))
