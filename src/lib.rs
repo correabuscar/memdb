@@ -4,7 +4,7 @@
 //! ## Examples
 //!
 //! ```
-//! # #[runtime::main]
+//! # #[async_std::main]
 //! # async fn main() -> std::io::Result<()> {
 //! let mut db = memdb::Memdb::open().await?;
 //! db.set("beep", "boop").await?;
@@ -16,9 +16,8 @@
 
 #![allow(unused_imports)]  //TODO: remove, eventually!
 
-use parking_lot::RwLock;
 
-use std::collections::HashMap;
+use dashmap::DashMap;
 use std::io;
 //use std::io::{Error, ErrorKind};
 //use std::error::Error;
@@ -81,9 +80,9 @@ impl std::convert::From<MyError> for std::io::Error {
 }
 
 /// Key-value database.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Memdb {
-    hashmap: Arc<RwLock<HashMap<Vec<u8>, Vec<u8>>>>,
+    hashmap: Arc<DashMap<Vec<u8>, Vec<u8>>>,
 }
 
 impl Memdb {
@@ -91,7 +90,7 @@ impl Memdb {
     #[inline]
     pub async fn open() -> io::Result<Self> {
         Ok(Self {
-            hashmap: Arc::new(RwLock::new(HashMap::<Vec<u8>, Vec<u8>>::new())),
+            hashmap: Arc::new(DashMap::<Vec<u8>, Vec<u8>>::new()),
         })
     }
 
@@ -103,7 +102,6 @@ impl Memdb {
         value: impl AsRef<[u8]>,
     ) -> io::Result<Option<Vec<u8>>> {
         let hashmap = self.hashmap.clone();
-        let mut hashmap = hashmap.write();
         Ok(hashmap.insert(key.as_ref().to_owned(), value.as_ref().to_owned()))
     }
 
@@ -112,8 +110,16 @@ impl Memdb {
     #[inline]
     pub async fn get(&self, key: impl AsRef<[u8]>) -> io::Result<Option<Vec<u8>>> {
         let key = key.as_ref().to_owned();
-        let hashmap = &self.hashmap.read();
-        Ok(hashmap.get(&key).cloned())
+//        let hashmap = &self.hashmap.read();
+//        Ok(hashmap.get(&key).cloned())
+        let hashmap = &self.hashmap;
+        match hashmap.get(&key) {
+            Some(value) => {
+                let value = value.clone();
+                Ok(Some(value))
+            }
+            None => Ok(None),
+        }
     }
 
     /// Ensure a key doesn't exist in the db.
@@ -131,9 +137,11 @@ impl Memdb {
     //exact line number for the failing assert_eq!
     //pub async fn del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Vec<u8>> {
     //pub async fn del(&mut self, key: impl AsRef<[u8]>) -> std::result::Result<Vec<u8>, MyError> {
-    pub async fn del(&mut self, key: impl AsRef<[u8]>) -> Result<Vec<u8>> {
+//    pub async fn del(&mut self, key: impl AsRef<[u8]>) -> Result<Vec<u8>> {
+    pub async fn del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Option<(Vec<u8>, Vec<u8>)>> {
         let key = key.as_ref().to_owned();
-        let hashmap = &mut self.hashmap.write();
+        //let hashmap = &mut self.hashmap.write();
+        let hashmap = &mut self.hashmap;
         let res=hashmap.remove(&key);
         //let _f = std::fs::File::create("FIXME")?; // `?` couldn't convert the error to `MyError`:
         //the trait `std::convert::From<std::io::Error>` is not implemented for `MyError`

@@ -11,6 +11,7 @@ edition = "2018"
 
 [dependencies]
 parking_lot = "0.11.0"
+dashmap = "4.0.2"
 #ccl = "5.1.5"
 #futures-preview = { version = "0.3.0-alpha.18", features = ["async-await", "nightly"] }
 #futures-timer = "0.3"
@@ -20,5 +21,5 @@ custom_error = "1.7.1"
 
 
 [dev-dependencies]
-runtime = "0.3.0-alpha.7"
+async-std = { version = "1.9.0", features = ["attributes"] }
 futures-preview = { version = "0.3.0-alpha.19", features = ["async-await"] }

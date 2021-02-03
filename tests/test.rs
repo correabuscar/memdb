@@ -1,14 +1,13 @@
 #![allow(unused_imports)]  //TODO: remove, eventually!
 
 use memdb::Memdb;
-//use std::error;
 use std::io;
 use futures::try_join;
 use futures::executor::block_on;
 use std::io::{Error, ErrorKind};
 
 
-#[runtime::test]
+#[async_std::test]
 async fn set_get() -> io::Result<()> {
     let mut db = Memdb::open().await?;
     db.set("beep", "boop").await?;
@@ -17,7 +16,7 @@ async fn set_get() -> io::Result<()> {
     Ok(())
 }
 
-#[runtime::test]
+#[async_std::test]
 async fn set_get_del() -> io::Result<()> {
     let mut db = Memdb::open().await?;
     db.set("beep", "boop").await?;
@@ -45,7 +44,7 @@ async fn set_get_del() -> io::Result<()> {
     Ok(())
 }
 
-#[runtime::test]
+#[async_std::test]
 async fn set_get_del_dry() -> io::Result<()> {
     let mut db = Memdb::open().await?;
     let key="beep";
@@ -82,7 +81,7 @@ async fn set_get_del_dry() -> io::Result<()> {
 }
 
 
-#[runtime::test]
+#[async_std::test]
 async fn double_del() -> io::Result<()> {
     let mut db = Memdb::open().await?;
     db.set("beep", "boop").await?;
@@ -100,14 +99,14 @@ async fn double_del() -> io::Result<()> {
     Ok(())
 }
 
-#[runtime::test]
+#[async_std::test]
 async fn threaded_set_get() -> io::Result<()> {
     let db = Memdb::open().await?;
 
     let mut handle = db.clone();
-    runtime::spawn(async move {
+    async_std::task::spawn(async move {
         handle.set("beep", "boop").await?;
-        runtime::spawn(async move {
+        async_std::task::spawn(async move {
             let handle = handle.clone();
             let val = handle.get("beep").await?;
             assert_eq!(val, Some("boop".as_bytes().to_owned()));
@@ -121,7 +120,7 @@ async fn threaded_set_get() -> io::Result<()> {
     return Ok(());
 }
 
-#[runtime::test]
+#[async_std::test]
 async fn threaded_set_get_mod1() -> io::Result<()> {
     let db = Memdb::open().await?;
 
