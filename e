@@ -1,3 +1,3 @@
 #!/bin/bash
 
-vim src/lib.rs
+"${EDITOR:-vim}" src/lib.rs

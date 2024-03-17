@@ -1,3 +1,3 @@
 #!/bin/bash
 
-vim Cargo.toml
+"${EDITOR:-vim}" Cargo.toml

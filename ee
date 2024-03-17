@@ -1,3 +1,3 @@
 #!/bin/bash
 
-vim tests/test.rs
+"${EDITOR:-vim}" tests/test.rs
