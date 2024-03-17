@@ -127,8 +127,16 @@ impl Memdb {
     #[inline]
     pub async fn ensure_del(&mut self, key: impl AsRef<[u8]>) -> io::Result<Option<Vec<u8>>> {
         let key = key.as_ref().to_owned();
-        let hashmap = &mut self.hashmap.write();
-        Ok(hashmap.remove(&key))
+        //let hashmap = &mut self.hashmap.write();
+        let hashmap = &mut self.hashmap;
+        return Ok(match hashmap.remove(&key) {
+            Some((_,prev_val)) => {
+                Some(prev_val)
+            },
+            None => {
+                None
+            }
+        });
     }
 
     /// Delete a key from the database.
@@ -151,7 +159,7 @@ impl Memdb {
         //let _f = std::fs::File::create("FIXME")?; // `?` couldn't convert the error to `MyError`:
         //the trait `std::convert::From<std::io::Error>` is not implemented for `MyError`
         match res {
-            Some(prev_val) => {
+            Some((_,prev_val)) => {
                 //Err::<(), Option<Vec<u8>>>(Some(prev_val))
                 return Ok(prev_val);
             },

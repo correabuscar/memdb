@@ -126,10 +126,12 @@ async fn threaded_set_get_mod1() -> io::Result<()> {
 
     let mut handle = db.clone();
     let handle2 = handle.clone();
-    let f0=runtime::spawn(async move {
+    //let f0=runtime::spawn(async move {
+        let f0=async_std::task::spawn(async move {
         let f1=handle.set("beep", "boop");//.await?;
         block_on(f1)?;
-        let f2=runtime::spawn(async move {
+        //let f2=runtime::spawn(async move {
+        let f2=async_std::task::spawn(async move {
             let val = handle2.get("beep").await?;
             assert_eq!(val, Some("boop".as_bytes().to_owned()));
             Ok::<(), std::io::Error>(())
