@@ -3,7 +3,7 @@ target/
 tmp/
 dist/
 npm-debug.log*
-Cargo.lock
+#Cargo.lock
 .DS_Store
 
 /.gitinfo.log
